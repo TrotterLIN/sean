@@ -360,7 +360,7 @@ import pandas as pd
 #from plotly.offline import plot
 # import plotly.offline as pyoff
 
-
+last_nan_index_WILLR = KBar_df['WILLR'][::-1].index[KBar_df['WILLR'][::-1].apply(pd.isna)][0]
 ###### K線圖, 移動平均線MA
 with st.expander("K線圖, 移動平均線"):
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
