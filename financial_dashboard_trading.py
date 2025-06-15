@@ -330,7 +330,19 @@ if len(nan_indexes_MACD) > 0:
     last_nan_index_MACD = nan_indexes_MACD[0]
 else:
     last_nan_index_MACD = 0
+#%%
+#####  (ix) 威廉指標策略
 
+@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
+def Calculate_WILLR(df, period=14):
+    high_max = df['high'].rolling(window=period).max()
+    low_min = df['low'].rolling(window=period).min()
+    willr = -100 * (high_max - df['close']) / (high_max - low_min)
+    return willr
+
+with st.expander("設定 威廉指標 (WILLR) 參數"):
+    willr_period = st.slider("WILLR 計算週期", 1, 100, 14)
+KBar_df['WILLR'] = Calculate_WILLR(KBar_df, willr_period)
 
 
 
@@ -452,7 +464,19 @@ with st.expander("MACD(異同移動平均線)"):
     fig4.layout.yaxis2.showgrid=True
     st.plotly_chart(fig4, use_container_width=True)
 
-
+# WILLR 威廉指標
+with st.expander("WILLR - 威廉指標"):
+    fig8 = make_subplots(specs=[[{"secondary_y": False}]])
+    fig8.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
+    fig8.add_trace(
+        go.Scatter(
+            x=KBar_df['time'][last_nan_index_WILLR+1:],
+            y=KBar_df['WILLR'][last_nan_index_WILLR+1:],
+            mode='lines',
+            name=f'WILLR({willr_period})'
+        )
+    )
+    st.plotly_chart(fig8, use_container_width=True)
 
 #%%
 ####### (6) 程式交易 #######
