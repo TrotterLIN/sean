@@ -331,7 +331,7 @@ if len(nan_indexes_MACD) > 0:
 else:
     last_nan_index_MACD = 0
 #%%
-#####  (ix) 威廉指標策略
+#####  (v) 威廉指標策略
 
 @st.cache_data(ttl=3600, show_spinner="正在加載資料...")
 def Calculate_WILLR(df, period=14):
@@ -343,6 +343,17 @@ def Calculate_WILLR(df, period=14):
 with st.expander("設定 威廉指標 (WILLR) 參數"):
     willr_period = st.slider("WILLR 計算週期", 1, 100, 14)
 KBar_df['WILLR'] = Calculate_WILLR(KBar_df, willr_period)
+
+#%%
+#####  (vi) ROC - 價格變動率指標
+@st.cache_data(ttl=3600, show_spinner="正在加載資料...")
+def Calculate_ROC(df, period=12):
+    roc = ((df['close'] - df['close'].shift(period)) / df['close'].shift(period)) * 100
+    return roc
+
+with st.expander("設定 ROC（變動率）參數"):
+    roc_period = st.slider("ROC 計算週期", 1, 100, 12)
+KBar_df['ROC'] = Calculate_ROC(KBar_df, roc_period)
 
 
 
@@ -359,7 +370,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 #from plotly.offline import plot
 # import plotly.offline as pyoff
-
+last_nan_index_ROC   = KBar_df['ROC'][::-1].index[KBar_df['ROC'][::-1].apply(pd.isna)][0]
 last_nan_index_WILLR = KBar_df['WILLR'][::-1].index[KBar_df['WILLR'][::-1].apply(pd.isna)][0]
 ###### K線圖, 移動平均線MA
 with st.expander("K線圖, 移動平均線"):
@@ -477,7 +488,20 @@ with st.expander("WILLR - 威廉指標"):
         )
     )
     st.plotly_chart(fig8, use_container_width=True)
-
+# ROC 價格變動率指標
+with st.expander("ROC - 價格變動率指標"):
+    fig10 = make_subplots(specs=[[{"secondary_y": False}]])
+    fig10.update_layout(xaxis=dict(rangeslider=dict(visible=True)))
+    fig10.add_trace(
+        go.Scatter(
+            x=KBar_df['time'][last_nan_index_ROC+1:],
+            y=KBar_df['ROC'][last_nan_index_ROC+1:],
+            mode='lines',
+            name=f'ROC({roc_period})'
+        )
+    )
+    st.plotly_chart(fig10, use_container_width=True)
+	
 #%%
 ####### (6) 程式交易 #######
 st.subheader("程式交易:")
